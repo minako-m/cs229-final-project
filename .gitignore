@@ -1,0 +1,10 @@
+data/
+src/kazakh/checkpoints
+src/french/checkpoints
+
+.DS_Store
+src/__pycache__/
+src/french/.DS_Store
+src/french/__pycache__/
+src/kazakh/.DS_Store
+src/kazakh/__pycache__/
