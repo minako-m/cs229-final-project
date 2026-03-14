@@ -49,28 +49,27 @@ def main(json_path):
         top_indices = np.argsort(row_sums)[-10:][::-1]  # indices of top 10 true characters
         top_chars = [char_list[i] for i in top_indices]
 
-        # For each top character, find the most common misclassified prediction (not itself), and show percent of misclassification
-        table_data = []
-        for idx in top_indices:
-            true_char = char_list[idx]
+        # For each character, calculate misclassification percent and most common misclassified character
+        misclass_info = []
+        for idx, true_char in enumerate(char_list):
             row = conf_matrix[idx]
             total = row.sum()
-            # Exclude correct predictions (diagonal)
             row_no_diag = row.copy()
             row_no_diag[idx] = 0
-            if row_no_diag.sum() > 0:
+            if total > 0 and row_no_diag.sum() > 0:
                 mis_idx = np.argmax(row_no_diag)
                 mis_char = char_list[mis_idx]
-                mis_percent = 100 * row_no_diag[mis_idx] / total if total > 0 else 0
+                mis_percent = 100 * row_no_diag[mis_idx] / total
             else:
                 mis_char = ''
                 mis_percent = 0
-            table_data.append([
-                true_char,
-                mis_char,
-                f"{mis_percent:.1f}%"
-            ])
+            misclass_info.append((true_char, mis_char, mis_percent))
 
+        # Sort by mis_percent descending and take top 10
+        misclass_info = sorted(misclass_info, key=lambda x: x[2], reverse=True)[:10]
+        table_data = [[true_char, mis_char, f"{mis_percent:.1f}%"] for true_char, mis_char, mis_percent in misclass_info]
+
+        import os
         fig, ax = plt.subplots(figsize=(7, 0.6*len(table_data)+2))
         ax.axis('off')
         table = ax.table(
@@ -83,9 +82,15 @@ def main(json_path):
         table.auto_set_font_size(False)
         table.set_fontsize(10)
         table.auto_set_column_width([0, 1, 2])
-        plt.title('Top 10 Character Misclassifications', y=0.98)
+        plt.title('Top 10 Character Misclassifications by %', y=0.98)
         plt.tight_layout()
+        # Save the plot
+        save_dir = r"C:\Users\Stephanie\OneDrive\Documents\Stanford 25-26\Winter '26\CS229\final_project\cs229-final-project\plots\kazakh_metrics_plots"
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, "character_confusion_kazakh.png")
+        plt.savefig(save_path, dpi=200)
         plt.show()
+        print(f"Plot saved to {save_path}")
     else:
         print("No data to plot. Please ensure the JSON file contains predictions and targets.")
 
